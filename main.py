@@ -55,7 +55,7 @@ class NMExtension(Extension):
         items_cache = []
 
         try:
-            vpns = os.popen('nmcli -t connection show | grep vpn').read().rstrip()
+            vpns = os.popen('nmcli -t connection show | grep ":vpn:"').read().rstrip()
             vpns = vpns.split("\n")
 
             for v in vpns:
@@ -151,15 +151,16 @@ class NMExtension(Extension):
                 sleep(int(self.preferences["rescan_wait"]))
                 last_scan = time_now
 
-            wifis = os.popen('nmcli -t device wifi list').read().rstrip()
+            wifis = os.popen('nmcli -t -f SSID,FREQ,RATE,SIGNAL,SECURITY device wifi list').read().rstrip()
             wifis = wifis.split("\n")
 
             for w in wifis:
                 wifi = w.split(":")
-                name = wifi[1]
-                speed = wifi[4]
-                signal = wifi[5]
-                security = wifi[7]
+                name = wifi[0]
+                freq = wifi[1]
+                speed = wifi[2]
+                signal = wifi[3]
+                security = wifi[4]
                 if int(signal) > 70:
                     icon = "wifi-n3"
                 if (int(signal) > 30) and (int(signal) < 70):
@@ -168,7 +169,7 @@ class NMExtension(Extension):
                     icon = "wifi-n1"
                 profiles[name] = name
 
-                desc = "Speed: %s, Security: %s, Signal: %s" % (speed, security, signal)
+                desc = "Speed: %s, Security: %s, Signal: %s, Freq: %s" % (speed, security, signal, freq)
 
                 if (query in name.lower()) or (query in desc.lower()):
                     items_cache.append(create_item(name, desc, icon, {"mod": "wifi", "name": name}))
